@@ -1,0 +1,23 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h1>List your item</h1>
+
+    <form action="POST">
+    	{% csrf_token %}
+    	<table>
+
+    		{% for field in form %}
+    		<tr>
+    			<td> {{ field.label_tag }} </td>
+    		</tr>
+    		<tr>
+    			<td> {{ field }} </td>
+    		</tr>
+    		{% endfor %}
+    	</table>
+    	<br/>
+    	<input type="submit" value="List it!">
+
+    </form>
+{% endblock %}

@@ -1,7 +1,23 @@
 {% extends "auctions/layout.html" %}
+{% load static %}
 
 {% block body %}
     <h2>Active Listings</h2>
 
-    TODO
+    {% for listing in active_listings %}
+
+    <div class="listing-card">
+
+        <p style="text-align:left;"> {{ listing.title |title}} </p>
+
+        <p style="text-align:center;"> {{ listing.description }} </p>
+
+        <img class="listing-img" src="{{ listing.image_url }}">
+
+        <p style="text-align:center; color: green;"> {{ listing.initial_bid }}
+            
+    </div>
+    <br />
+
+    {% endfor %}
 {% endblock %}
