@@ -2,22 +2,33 @@
 {% load static %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <h2 style="color: green;">Active Listings</h2>
 
     {% for listing in active_listings %}
 
     <div class="listing-card">
 
-        <p style="text-align:left;"> {{ listing.title |title}} </p>
+        <p> {{ listing.title |title}} </p>
+        <p> {{ listing.description }} </p>
 
-        <p style="text-align:center;"> {{ listing.description }} </p>
+        <!-- This is ugly but I can't figure out how to
+            access a dict item in Django's version
+            of Jinja2 -->
+        {% for item_id, bid in display_bids.items %}
+
+            {% if item_id == listing.item_id %}
+                <p><strong>{{ bid }}</strong></p>
+            {% endif %}
+
+        {% endfor %}
 
         <img class="listing-img" src="{{ listing.image_url }}">
+        <br />
 
-        <p style="text-align:center; color: green;"> {{ listing.initial_bid }}
-            
     </div>
+
     <br />
 
     {% endfor %}
+
 {% endblock %}
