@@ -12,10 +12,13 @@ class User(AbstractUser):
 
 class Listing(models.Model):
 
-    class Category(models.TextChoices):
-        CLOTHING = "C", "Clothing"
-        ELECTRONICS = "E", "Electronics"
-        EVERYTHING = "EE", "Everything Else"
+    CAT_CHOICES = (
+        ("fashion", "Fashion"),
+        ("electronics", "Electronics"),
+        ("home", "Home"),
+        ("toys", "Toys"),
+        ("everything_else", "Everything Else"),
+    )
 
     # Auto-generated
     item_id = models.AutoField(primary_key=True)
@@ -32,8 +35,8 @@ class Listing(models.Model):
 
     image_url = models.URLField(max_length=512, blank=True)
     
-    category = models.CharField(max_length=2,
-                                choices=Category.choices,
+    category = models.CharField(max_length=64,
+                                choices=CAT_CHOICES,
                                 blank=True,
                                 default=None, 
                                 null=True)

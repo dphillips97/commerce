@@ -8,10 +8,10 @@ from auctions.models import Listing, ListingForm, Bid, BidForm
 from .models import User
 
 
-def index(request, cat_filter=None):
+def index(request, category=None):
 
-    if cat_filter:
-        active_listings = Listing.objects.filter(active=True).filter(cat_filter)
+    if category is not None:
+        active_listings = Listing.objects.filter(active=True, category=category)
 
     else:
         active_listings = Listing.objects.filter(active=True)
@@ -120,3 +120,13 @@ def create(request):
                 "form": listing_form
                 })
 
+def see_categories(request):
+
+    # Get categories from existing listings (not Listing class choices)
+    #cat_lst = [x.choices for x in Listing._meta.fields() if x.choices]
+
+    categories = Listing.CAT_CHOICES
+
+    context = {"categories": categories}
+
+    return render(request, "auctions/see_categories.html", context)

@@ -1,0 +1,16 @@
+{% extends "auctions/layout.html" %}
+
+
+{% block body %}
+	
+<h2>Categories</h2>
+	<ul>
+	{% for cat_name, readable_name in categories %}
+		<li><a href="/categories/{{ cat_name }}">{{ readable_name }}</a></li>
+	{% endfor %}
+	</ul>
+
+{% endblock %}
+
+
+<!-- Thank all Gods for https://stackoverflow.com/questions/11278074/how-do-i-display-django-model-choice-list-in-a-template -->
