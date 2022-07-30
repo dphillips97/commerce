@@ -122,11 +122,51 @@ def create(request):
 
 def see_categories(request):
 
-    # Get categories from existing listings (not Listing class choices)
-    #cat_lst = [x.choices for x in Listing._meta.fields() if x.choices]
-
     categories = Listing.CAT_CHOICES
 
     context = {"categories": categories}
 
     return render(request, "auctions/see_categories.html", context)
+
+def see_item(request, item_id):
+
+    item = Listing.objects.filter(item_id=item_id).first()
+
+    max_bid = Bid.objects.filter(item_id=item_id).first()
+
+    if request.method == "GET": 
+
+        bid_form = BidForm()
+
+        if item and max_bid:
+
+            return render(request, "auctions/see_item.html", {
+                "item_info": item,
+                "max_bid": max_bid,
+                "bid_form": bid_form})
+
+
+    if request.method == "POST":
+
+        bid_form_post = BidForm(request.POST)
+
+        if bid_form_post.is_valid():
+
+            if (int(bid_form_post.cleaned_data["amount"]) <= max_bid.amount):
+
+                return render(request, "auctions/see_item.html", {
+                    "item_info": item,
+                    "max_bid": max_bid,
+                    "bid_form": bid_form_post,
+                    "message": "Your bid is too low!"
+                    })
+
+            else:
+
+                bid_form_post.save(commit=False)
+
+                bid_form_post.item_id = item.item_id
+
+                bid_form_post.save()
+
+                return HttpResponseRedirect(reverse("index"))

@@ -59,7 +59,7 @@ class ListingForm(ModelForm):
 class Bid(models.Model):
 
     item_id = models.IntegerField()
-
+    
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
                                 null=True,

@@ -17,3 +17,11 @@ body {
     margin-right: auto;
     width: 50%;
 }
+
+.listing-info-table, tr, td
+{
+    padding: 10px;
+    text-align: left;
+    border: 1px solid;
+    border-color: sandybrown;
+}
