@@ -1,12 +1,10 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from auctions.models import Listing, ListingForm, Bid, BidForm
-
-from .models import User
-
+from auctions.models import Listing, ListingForm, Bid, BidForm, Comment, CommentForm, Watchlist, User
 
 def index(request, category=None):
 
@@ -21,6 +19,7 @@ def index(request, category=None):
     # For each queryset item, find max bid (class Decimal)
     for listing in active_listings:
         
+        # Oof this is ugly - clean it up
         try:
             bids = Bid.objects.filter(item_id=listing.item_id)
             max_bid = bids.order_by('-amount').first().amount
@@ -124,35 +123,57 @@ def see_categories(request):
 
     categories = Listing.CAT_CHOICES
 
+    # Can delete?
     context = {"categories": categories}
 
     return render(request, "auctions/see_categories.html", context)
+
 
 def see_item(request, item_id):
 
     item = Listing.objects.filter(item_id=item_id).first()
 
-    max_bid = Bid.objects.filter(item_id=item_id).first()
+    max_bid = Bid.objects.filter(item_id=item_id).order_by("-amount").first()
+
+    comments = Comment.objects.filter(item_id=item_id).all()
+
+    u = User.objects.get(username=request.user)
+
+    # Check if item is watched
+    watched_queryset = Watchlist.objects.filter(user_id=u, item_id=item_id)
+
+    # Alter button text based on whether item is watched
+    if watched_queryset:
+        watch_message = "Remove from watchlist"
+    else:
+        watch_message = "Add to watchlist"
 
     if request.method == "GET": 
 
+        # Template will only show these if user is signed in
         bid_form = BidForm()
+        comment_form = CommentForm()
 
+        # Should fire every time?
         if item and max_bid:
 
             return render(request, "auctions/see_item.html", {
                 "item_info": item,
                 "max_bid": max_bid,
-                "bid_form": bid_form})
+                "bid_form": bid_form,
+                "comments": comments,
+                "comment_form": comment_form,
+                "watch_message": watch_message})
 
-
-    if request.method == "POST":
+    if request.method == "POST" and 'bid_btn' in request.POST:
 
         bid_form_post = BidForm(request.POST)
 
         if bid_form_post.is_valid():
 
-            if (int(bid_form_post.cleaned_data["amount"]) <= max_bid.amount):
+            bid_int = int(bid_form_post.cleaned_data["amount"])
+
+            if (bid_int <= max_bid.amount):
 
                 return render(request, "auctions/see_item.html", {
                     "item_info": item,
@@ -163,10 +184,53 @@ def see_item(request, item_id):
 
             else:
 
-                bid_form_post.save(commit=False)
+                new_bid = Bid(item_id=item, amount=bid_int)
 
-                bid_form_post.item_id = item.item_id
+                new_bid.save()
 
-                bid_form_post.save()
+                return HttpResponseRedirect(f"/item/{item.item_id}")
 
-                return HttpResponseRedirect(reverse("index"))
+    elif request.POST and 'comment_btn' in request.POST:
+
+        comment_form_post = CommentForm(request.POST)
+
+        if comment_form_post.is_valid():
+
+            new_comment = Comment(item_id=item, 
+                user_id=request.user,
+                comment_text=comment_form_post.cleaned_data['comment_text'])
+
+            new_comment.save()
+
+            return HttpResponseRedirect(f"/item/{item.item_id}")
+
+    elif request.POST and 'watch-btn' in request.POST:
+
+        # If exists then delete
+        if watched_queryset:
+            watched_queryset.delete()
+
+        elif not watched_queryset:
+            new_watchlist_item = Watchlist(item_id=item,
+                user_id=u)
+            new_watchlist_item.save()
+
+        return HttpResponseRedirect(f"/item/{item.item_id}")
+
+@login_required()
+def see_watchlist(request):
+
+    # Get current user (must pass object)
+    u = User.objects.get(username=request.user)
+    
+    # Get all watched items
+    watched_items = Watchlist.objects.filter(user_id=u)
+
+    # Why do I need "item_id_id"?
+    # Contains primary key of Parent model
+    # Maybe calling everything item_id is mixing stuff up?
+    items = [Listing.objects.get(item_id=x.item_id_id) for x in watched_items]
+
+    return render(request, "auctions/see_watchlist.html", {
+        "items": items
+        })

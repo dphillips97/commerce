@@ -28,7 +28,6 @@ class Listing(models.Model):
                                     null=True,
                                     blank=True)
 
-    # User-generated
     title = models.CharField(max_length=64)
 
     description = models.TextField()
@@ -47,7 +46,7 @@ class Listing(models.Model):
                                     validators=[MinValueValidator(0.0)])
 
     def __str__(self):
-        return f"{self.item_id}: {self.title} listed by {self.lister_id}. Active={self.active}."
+        return f"{self.item_id}: {self.title}."
 
 # Create form from model to pass to create_listing page
 class ListingForm(ModelForm):
@@ -58,7 +57,10 @@ class ListingForm(ModelForm):
 
 class Bid(models.Model):
 
-    item_id = models.IntegerField()
+    item_id = models.ForeignKey(Listing,
+                                on_delete=models.CASCADE,
+                                to_field="item_id",
+                                related_name="bids")
     
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
@@ -78,3 +80,38 @@ class BidForm(ModelForm):
     class Meta:
         model = Bid
         fields = ['amount']
+
+class Comment(models.Model):
+
+    item_id = models.ForeignKey(Listing,
+                                on_delete=models.CASCADE,
+                                to_field="item_id",
+                                related_name="comment")
+
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                on_delete=models.CASCADE,
+                                null=True,
+                                blank=True)
+
+    comment_text = models.TextField()
+
+class CommentForm(ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['comment_text']
+
+class Watchlist(models.Model):
+
+    item_id = models.ForeignKey(Listing,
+                                on_delete=models.CASCADE,
+                                to_field="item_id",
+                                related_name="watchlist")
+
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                on_delete=models.CASCADE,
+                                null=True,
+                                blank=True)
+
+    def __str__(self):
+        return f"{self.item_id} added to watchlist of {self.user_id}"
+

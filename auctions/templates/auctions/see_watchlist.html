@@ -1,0 +1,14 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+<h2>Watchlist</h2>
+
+<ul>
+{% for item in items %}
+	<li><a href="/item/{{item.item_id}}">{{ item.title }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock %}

@@ -4,6 +4,12 @@
 {% block body %}
     <h2 style="color: green;">Active Listings</h2>
 
+    {% if message %}
+        <div class="alert alert-success" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
+
     {% for listing in active_listings %}
 
     <div class="listing-card">

@@ -7,7 +7,8 @@ body {
     border-width: 2px; 
     border-color: black; 
     border-style: solid; 
-    padding: 5px;
+    padding: 10px;
+    margin: 10px;
 }
 
 .listing-img
@@ -18,10 +19,11 @@ body {
     width: 50%;
 }
 
-.listing-info-table, tr, td
+.comment-box
 {
     padding: 10px;
-    text-align: left;
-    border: 1px solid;
-    border-color: sandybrown;
+    border-width: 2px; 
+    border-color: lightgray;
+    border-style: solid;
+    margin: 10px;
 }

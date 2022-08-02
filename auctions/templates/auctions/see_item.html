@@ -2,38 +2,62 @@
 {% load static %}
 
 {% block body %}
+
 	<div class="listing-card">
+		
 		<h2>{{ item_info.title| title }}</h2>
 		<p>Price ${{ max_bid.amount }}</p>
 		<p>Category: {{ item_info.category|title }}</p>
-		<p>Item #{{ item_info.item_id }}</p>
+		<p>Item ID: {{ item_info.item_id }}</p>
 		<p>Listed by: {{  item_info.user_id }}</p>
-
 		<img class="listing-img" src="{{item_info.image_url}}"></img>
-		<hr \>
 		<p style="text-align: center;">{{ item_info.description }}</p>
+		<br \>
 
-		<h4>Bid on {{ item_info.title|title }}</h4>
+		{% if user.is_authenticated %}
+		<form method="post">
+			{% csrf_token %}
+			<button type="submit" name="watch-btn" class="btn btn-primary">{{ watch_message }}</button>
+		</form>
+		{% endif %}
+		<hr />
 
 
-		{% if message %}
-			<div class="alert alert-warning" role="alert">
-				{{ message }}
-			</div>
+		{% if user.is_authenticated %}
+			<h4>Bid on {{ item_info.title|title }}</h4>
+
+			{% if message %}
+				<div class="alert alert-warning" role="alert">
+					{{ message }}
+				</div>
+			{% endif %}
+
+			<form action="" method="post">
+				{% csrf_token %}
+				{{ bid_form.amount}}
+				<br />
+				<button type="submit" name="bid_btn" class="btn btn-primary">Bid!</button>
+			</form>
+			<hr />
 		{% endif %}
 
-		<form action="" method="post">
-			{% csrf_token %}
+		<h4>Comments</h4>
+
+			{% for comment in comments %}
+				<div class="comment-box">
+					{{ comment.comment_text }}
+					<em>- {{ comment.user_id }}</em>
+				</div>
+			{% endfor %}
 		
-			{{ bid_form.amount}}
-			<input type="submit" value="Bid!">
-
-		</form>
-
-
-		
-
+		{% if user.is_authenticated %}
+			<h5>Post a comment</h5>
+			<form action="" method="post">
+				{% csrf_token %}
+				{{ comment_form.comment_text }}
+				<br />
+				<button type="submit" name="comment_btn" class="btn btn-primary">Post a comment!</button>
+			</form>
+		{% endif %}
 	</div>
-
-
 {% endblock %}
