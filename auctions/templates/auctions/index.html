@@ -23,7 +23,7 @@
         {% for item_id, bid in display_bids.items %}
 
             {% if item_id == listing.item_id %}
-                <p><strong>{{ bid }}</strong></p>
+                <p><strong>${{ bid }}</strong></p>
             {% endif %}
 
         {% endfor %}

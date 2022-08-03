@@ -3,17 +3,24 @@
 
 {% block body %}
 
+	{% if win_state %}
+		<div class="alert alert-success" role="alert">
+		  You won the auction!
+		</div>
+	{% endif %}
+
 	<div class="listing-card">
 		
 		<h2>{{ item_info.title| title }}</h2>
 		<p>Price ${{ max_bid.amount }}</p>
 		<p>Category: {{ item_info.category|title }}</p>
 		<p>Item ID: {{ item_info.item_id }}</p>
-		<p>Listed by: {{  item_info.user_id }}</p>
+		<p>Listed by: {{  item_info.lister_id }}</p>
 		<img class="listing-img" src="{{item_info.image_url}}"></img>
 		<p style="text-align: center;">{{ item_info.description }}</p>
 		<br \>
 
+		<!-- Watchlist button -->
 		{% if user.is_authenticated %}
 		<form method="post">
 			{% csrf_token %}
@@ -22,27 +29,35 @@
 		{% endif %}
 		<hr />
 
+		<!-- Option to close auction -->
+		{% if close_option %}
+		<form method="post">
+			<button type="submit" name="close_btn" class="btn btn-warning">Close listing</button>
+		</form>
+		<hr />
+		{% endif %}
 
+		<!-- Bid if authenticated -->
 		{% if user.is_authenticated %}
 			<h4>Bid on {{ item_info.title|title }}</h4>
 
-			{% if message %}
+			{% if invalid_bid %}
 				<div class="alert alert-warning" role="alert">
-					{{ message }}
+					Your bid is too low!
 				</div>
 			{% endif %}
 
-			<form action="" method="post">
+			<form method="post">
 				{% csrf_token %}
-				{{ bid_form.amount}}
+				{{ bid_form.amount }}
 				<br />
 				<button type="submit" name="bid_btn" class="btn btn-primary">Bid!</button>
 			</form>
 			<hr />
 		{% endif %}
 
+		<!-- See comments -->
 		<h4>Comments</h4>
-
 			{% for comment in comments %}
 				<div class="comment-box">
 					{{ comment.comment_text }}
@@ -50,6 +65,7 @@
 				</div>
 			{% endfor %}
 		
+		<!-- Enter comment if logged in -->
 		{% if user.is_authenticated %}
 			<h5>Post a comment</h5>
 			<form action="" method="post">
@@ -59,5 +75,6 @@
 				<button type="submit" name="comment_btn" class="btn btn-primary">Post a comment!</button>
 			</form>
 		{% endif %}
+
 	</div>
 {% endblock %}

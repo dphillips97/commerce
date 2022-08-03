@@ -52,7 +52,7 @@ class Listing(models.Model):
 class ListingForm(ModelForm):
     class Meta:
         model = Listing
-        fields = ['title', 'description', 'image_url', 'category', 'initial_bid']
+        fields = ['title', 'description', 'image_url', 'category', 'initial_bid', 'lister_id']
 
 
 class Bid(models.Model):

@@ -19,12 +19,10 @@ def index(request, category=None):
     # For each queryset item, find max bid (class Decimal)
     for listing in active_listings:
         
-        # Oof this is ugly - clean it up
         try:
             bids = Bid.objects.filter(item_id=listing.item_id)
             max_bid = bids.order_by('-amount').first().amount
-            max_bid_format = "${:.2f}".format(max_bid)
-            display_bids[listing.item_id] = max_bid_format
+            display_bids[listing.item_id] = max_bid
 
         except:
             display_bids[listing.item_id] = "No bids"
@@ -105,7 +103,7 @@ def create(request):
             complete_listing = listing_form.save()
 
             # Update bid value in Bid table
-            initial_bid_entry = Bid(item_id=complete_listing.item_id,
+            initial_bid_entry = Bid(item_id=complete_listing,
                                     amount=complete_listing.initial_bid)
             
             initial_bid_entry.save()
@@ -131,31 +129,53 @@ def see_categories(request):
 
 def see_item(request, item_id):
 
+    # Get all relevant info
     item = Listing.objects.filter(item_id=item_id).first()
-
     max_bid = Bid.objects.filter(item_id=item_id).order_by("-amount").first()
-
     comments = Comment.objects.filter(item_id=item_id).all()
 
-    u = User.objects.get(username=request.user)
+    print(f"\n\n{max_bid}")
 
-    # Check if item is watched
-    watched_queryset = Watchlist.objects.filter(user_id=u, item_id=item_id)
+    # Get username to check for watchlist, win, and close status
+    u = User.objects.filter(username=request.user).first()
 
-    # Alter button text based on whether item is watched
-    if watched_queryset:
-        watch_message = "Remove from watchlist"
-    else:
-        watch_message = "Add to watchlist"
+    # Only do this if user is signed in
+    if u is not None:
+        # Check if item is watched
+        watched_queryset = Watchlist.objects.filter(user_id=u, item_id=item_id)
+
+        # Alter button text based on whether item is watched
+        if watched_queryset:
+            watch_message = "Remove from watchlist"
+        else:
+            watch_message = "Add to watchlist"
+
+        # Check if user is lister to allow to close auction
+        if item.lister_id == u:
+            close_option = True
+        else:
+            close_option = False
+
+        # Check if user has won to set win_status
+        # Lister can't be winner
+        if (max_bid.user_id == u and item.lister_id != u):
+            win_state = True
+        else:
+            win_state = False
+
 
     if request.method == "GET": 
 
-        # Template will only show these if user is signed in
-        bid_form = BidForm()
-        comment_form = CommentForm()
+        if u is None:
 
-        # Should fire every time?
-        if item and max_bid:
+            return render(request, "auctions/see_item.html", {
+                "item_info": item,
+                "max_bid": max_bid,
+                "comments": comments})
+
+        elif u is not None:
+            bid_form = BidForm()
+            comment_form = CommentForm()
 
             return render(request, "auctions/see_item.html", {
                 "item_info": item,
@@ -163,8 +183,11 @@ def see_item(request, item_id):
                 "bid_form": bid_form,
                 "comments": comments,
                 "comment_form": comment_form,
-                "watch_message": watch_message})
-
+                "watch_message": watch_message,
+                "close_option": close_option,
+                "win_state": win_state})
+        
+    # If user selects "bid"; form only shows up if logged in
     if request.method == "POST" and 'bid_btn' in request.POST:
 
         bid_form_post = BidForm(request.POST)
@@ -179,7 +202,7 @@ def see_item(request, item_id):
                     "item_info": item,
                     "max_bid": max_bid,
                     "bid_form": bid_form_post,
-                    "message": "Your bid is too low!"
+                    "invalid_bid": True
                     })
 
             else:
@@ -190,6 +213,7 @@ def see_item(request, item_id):
 
                 return HttpResponseRedirect(f"/item/{item.item_id}")
 
+    # If user selects "Comment"; only if user is logged in
     elif request.POST and 'comment_btn' in request.POST:
 
         comment_form_post = CommentForm(request.POST)
@@ -204,9 +228,10 @@ def see_item(request, item_id):
 
             return HttpResponseRedirect(f"/item/{item.item_id}")
 
+    # If user selects "Add to Watchlist" or "Remove from watchlist"
     elif request.POST and 'watch-btn' in request.POST:
 
-        # If exists then delete
+        # If exists in Watchlist then delete
         if watched_queryset:
             watched_queryset.delete()
 
@@ -217,10 +242,17 @@ def see_item(request, item_id):
 
         return HttpResponseRedirect(f"/item/{item.item_id}")
 
+    # If user is lister of item and selects "Close listing"
+    elif request.POST and 'close-btn' in request.POST:
+        
+        item.active = False
+        item.save()        
+
+
 @login_required()
 def see_watchlist(request):
 
-    # Get current user (must pass object)
+    # Get current user
     u = User.objects.get(username=request.user)
     
     # Get all watched items
