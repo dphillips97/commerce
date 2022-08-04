@@ -24,7 +24,7 @@ class Listing(models.Model):
     item_id = models.AutoField(primary_key=True)
     active = models.BooleanField(default=True)
     lister_id = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                    on_delete=models.CASCADE,
+                                    on_delete=models.SET_NULL,
                                     null=True,
                                     blank=True)
 
@@ -52,7 +52,7 @@ class Listing(models.Model):
 class ListingForm(ModelForm):
     class Meta:
         model = Listing
-        fields = ['title', 'description', 'image_url', 'category', 'initial_bid', 'lister_id']
+        fields = ['title', 'description', 'image_url', 'category', 'initial_bid']
 
 
 class Bid(models.Model):
@@ -89,7 +89,7 @@ class Comment(models.Model):
                                 related_name="comment")
 
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                on_delete=models.CASCADE,
+                                on_delete=models.SET_NULL,
                                 null=True,
                                 blank=True)
 

@@ -99,8 +99,13 @@ def create(request):
 
         if listing_form.is_valid():
 
-            # save method should return complete object            
-            complete_listing = listing_form.save()
+            u = User.objects.filter(username=request.user).first()
+           
+            complete_listing = listing_form.save(commit=False)
+
+            complete_listing.lister_id = u
+
+            complete_listing.save()
 
             # Update bid value in Bid table
             initial_bid_entry = Bid(item_id=complete_listing,
@@ -133,8 +138,6 @@ def see_item(request, item_id):
     item = Listing.objects.filter(item_id=item_id).first()
     max_bid = Bid.objects.filter(item_id=item_id).order_by("-amount").first()
     comments = Comment.objects.filter(item_id=item_id).all()
-
-    print(f"\n\n{max_bid}")
 
     # Get username to check for watchlist, win, and close status
     u = User.objects.filter(username=request.user).first()
@@ -194,7 +197,7 @@ def see_item(request, item_id):
 
         if bid_form_post.is_valid():
 
-            bid_int = int(bid_form_post.cleaned_data["amount"])
+            bid_int = float(bid_form_post.cleaned_data["amount"])
 
             if (bid_int <= max_bid.amount):
 
@@ -214,7 +217,7 @@ def see_item(request, item_id):
                 return HttpResponseRedirect(f"/item/{item.item_id}")
 
     # If user selects "Comment"; only if user is logged in
-    elif request.POST and 'comment_btn' in request.POST:
+    if request.method == "POST" and 'comment_btn' in request.POST:
 
         comment_form_post = CommentForm(request.POST)
 
@@ -229,7 +232,7 @@ def see_item(request, item_id):
             return HttpResponseRedirect(f"/item/{item.item_id}")
 
     # If user selects "Add to Watchlist" or "Remove from watchlist"
-    elif request.POST and 'watch-btn' in request.POST:
+    elif request.method == "POST" and 'watch-btn' in request.POST:
 
         # If exists in Watchlist then delete
         if watched_queryset:
@@ -243,10 +246,12 @@ def see_item(request, item_id):
         return HttpResponseRedirect(f"/item/{item.item_id}")
 
     # If user is lister of item and selects "Close listing"
-    elif request.POST and 'close-btn' in request.POST:
-        
+    elif request.method == "POST" and 'close-btn' in request.POST:
+
         item.active = False
-        item.save()        
+        item.save()
+
+        return HttpResponseRedirect(reverse("index"))
 
 
 @login_required()

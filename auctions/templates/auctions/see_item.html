@@ -32,7 +32,8 @@
 		<!-- Option to close auction -->
 		{% if close_option %}
 		<form method="post">
-			<button type="submit" name="close_btn" class="btn btn-warning">Close listing</button>
+			{% csrf_token %}
+			<button type="submit" name="close-btn" class="btn btn-warning">Close listing</button>
 		</form>
 		<hr />
 		{% endif %}
