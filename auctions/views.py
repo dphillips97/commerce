@@ -161,7 +161,7 @@ def see_item(request, item_id):
 
         # Check if user has won to set win_status
         # Lister can't be winner
-        if (max_bid.user_id == u and item.lister_id != u):
+        if (max_bid.user_id == u and item.lister_id != u and item.active == 0):
             win_state = True
         else:
             win_state = False
@@ -205,12 +205,13 @@ def see_item(request, item_id):
                     "item_info": item,
                     "max_bid": max_bid,
                     "bid_form": bid_form_post,
-                    "invalid_bid": True
+                    "invalid_bid": True,
+                    "watch_message": watch_message
                     })
 
             else:
 
-                new_bid = Bid(item_id=item, amount=bid_int)
+                new_bid = Bid(item_id=item, amount=bid_int, user_id=u)
 
                 new_bid.save()
 
@@ -271,3 +272,13 @@ def see_watchlist(request):
     return render(request, "auctions/see_watchlist.html", {
         "items": items
         })
+
+def inactive(request):
+
+    if request.method == "GET":
+            
+        inactive_items = Listing.objects.filter(active=False)
+
+        return render(request, "auctions/inactive.html", {
+            "inactive_items": inactive_items
+            })
