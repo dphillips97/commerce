@@ -201,12 +201,17 @@ def see_item(request, item_id):
 
             if (bid_int <= max_bid.amount):
 
+                # make new comment_form
+                comment_form = CommentForm()
+
                 return render(request, "auctions/see_item.html", {
                     "item_info": item,
                     "max_bid": max_bid,
                     "bid_form": bid_form_post,
                     "invalid_bid": True,
-                    "watch_message": watch_message
+                    "watch_message": watch_message,
+                    "comments": comments,
+                    "comment_form": comment_form
                     })
 
             else:
